@@ -1,0 +1,135 @@
+version: "3.9"
+
+# Development overrides — mount source code for hot reload on every service.
+# Usage: docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  # ─── Infrastructure tweaks ───────────────────────────────────────────────────
+
+  postgres:
+    # Expose verbose logging in dev
+    command: postgres -c log_statement=all -c log_destination=stderr
+
+  # ─── Node / TypeScript services ──────────────────────────────────────────────
+
+  auth-service:
+    build:
+      context: ../apps/auth-service
+      dockerfile: Dockerfile.dev
+      target: development
+    command: npx ts-node-dev --respawn --transpile-only --watch src src/index.ts
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../apps/auth-service/src:/app/src:delegated
+      - ../apps/auth-service/package.json:/app/package.json:ro
+      - ../packages:/packages:delegated
+
+  vault-service:
+    build:
+      context: ../apps/vault-service
+      dockerfile: Dockerfile.dev
+      target: development
+    command: npx ts-node-dev --respawn --transpile-only --watch src src/index.ts
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../apps/vault-service/src:/app/src:delegated
+      - ../apps/vault-service/package.json:/app/package.json:ro
+      - ../packages:/packages:delegated
+
+  graph-service:
+    build:
+      context: ../apps/graph-service
+      dockerfile: Dockerfile.dev
+      target: development
+    command: npx ts-node-dev --respawn --transpile-only --watch src src/index.ts
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../apps/graph-service/src:/app/src:delegated
+      - ../apps/graph-service/package.json:/app/package.json:ro
+      - ../packages:/packages:delegated
+
+  search-service:
+    build:
+      context: ../apps/search-service
+      dockerfile: Dockerfile.dev
+      target: development
+    command: npx ts-node-dev --respawn --transpile-only --watch src src/index.ts
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../apps/search-service/src:/app/src:delegated
+      - ../apps/search-service/package.json:/app/package.json:ro
+      - ../packages:/packages:delegated
+
+  ai-service:
+    build:
+      context: ../apps/ai-service
+      dockerfile: Dockerfile.dev
+      target: development
+    command: npx ts-node-dev --respawn --transpile-only --watch src src/index.ts
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../apps/ai-service/src:/app/src:delegated
+      - ../apps/ai-service/package.json:/app/package.json:ro
+      - ../packages:/packages:delegated
+
+  gateway:
+    build:
+      context: ../apps/gateway
+      dockerfile: Dockerfile.dev
+      target: development
+    command: npx ts-node-dev --respawn --transpile-only --watch src src/index.ts
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../apps/gateway/src:/app/src:delegated
+      - ../apps/gateway/package.json:/app/package.json:ro
+      - ../packages:/packages:delegated
+
+  media-service:
+    build:
+      context: ../apps/media-service
+      dockerfile: Dockerfile.dev
+      target: development
+    command: npx ts-node-dev --respawn --transpile-only --watch src src/index.ts
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../apps/media-service/src:/app/src:delegated
+      - ../apps/media-service/package.json:/app/package.json:ro
+      - ../packages:/packages:delegated
+
+  # ─── Python services (uvicorn --reload) ──────────────────────────────────────
+
+  embedding-service:
+    build:
+      context: ../apps/embedding-service
+      dockerfile: Dockerfile.dev
+      target: development
+    # uvicorn will reload on any .py file change inside /app
+    command: uvicorn main:app --host 0.0.0.0 --port 3006 --reload --reload-dir /app
+    environment:
+      ENVIRONMENT: development
+      LOG_LEVEL: debug
+    volumes:
+      - ../apps/embedding-service:/app:delegated
+
+  # ─── Next.js web app ─────────────────────────────────────────────────────────
+
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile.dev
+      target: development
+    # next dev for fast-refresh
+    command: npx next dev -p 3008
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ../apps/web:/app:delegated
+      - /app/node_modules
+      - /app/.next

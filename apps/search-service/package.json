@@ -1,0 +1,27 @@
+{
+  "name": "@notebooklm/search-service",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^9.0.1",
+    "@fastify/helmet": "^11.1.1",
+    "@fastify/jwt": "^8.0.1",
+    "@notebooklm/config": "workspace:*",
+    "@notebooklm/logger": "workspace:*",
+    "@notebooklm/types": "workspace:*",
+    "axios": "^1.6.8",
+    "drizzle-orm": "^0.30.0",
+    "ioredis": "^5.3.2",
+    "postgres": "^3.4.4",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.30",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.4.0"
+  }
+}

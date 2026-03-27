@@ -1,0 +1,332 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =============================================================================
+   CSS Custom Properties — Dark Theme (default)
+   ============================================================================= */
+:root {
+  --background: 240 10% 3.9%;       /* zinc-950 */
+  --foreground: 0 0% 98%;            /* zinc-50 */
+
+  --card: 240 10% 7%;                /* zinc-900 */
+  --card-foreground: 0 0% 98%;
+
+  --popover: 240 10% 5%;
+  --popover-foreground: 0 0% 98%;
+
+  --primary: 239 84% 67%;            /* indigo-500 */
+  --primary-foreground: 0 0% 100%;
+
+  --secondary: 240 5% 14%;           /* zinc-800 */
+  --secondary-foreground: 0 0% 98%;
+
+  --muted: 240 5% 14%;               /* zinc-800 */
+  --muted-foreground: 240 5% 65%;    /* zinc-400 */
+
+  --accent: 270 76% 60%;             /* purple-500 */
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 84% 60%;          /* red-500 */
+  --destructive-foreground: 0 0% 98%;
+
+  --border: 240 5% 18%;              /* zinc-800 */
+  --input: 240 5% 14%;
+  --ring: 239 84% 67%;
+
+  --radius: 0.5rem;
+
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Sidebar */
+  --sidebar-width: 256px;
+  --chat-panel-width: 320px;
+  --topbar-height: 48px;
+}
+
+/* Light mode override (opt-in via .light class) */
+.light {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 3.9%;
+  --card: 0 0% 98%;
+  --card-foreground: 240 10% 3.9%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 3.9%;
+  --primary: 239 84% 60%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 240 5% 94%;
+  --secondary-foreground: 240 5% 10%;
+  --muted: 240 5% 94%;
+  --muted-foreground: 240 4% 46%;
+  --accent: 270 76% 55%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 98%;
+  --border: 240 6% 90%;
+  --input: 240 6% 90%;
+  --ring: 239 84% 60%;
+}
+
+/* =============================================================================
+   Base Styles
+   ============================================================================= */
+@layer base {
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  html {
+    @apply dark;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Focus ring */
+  :focus-visible {
+    @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+
+  /* Selection */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.3);
+    color: hsl(var(--foreground));
+  }
+}
+
+/* =============================================================================
+   Custom Scrollbar
+   ============================================================================= */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--border));
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: hsl(var(--border)) transparent;
+}
+
+/* =============================================================================
+   Prose / Markdown Styles
+   ============================================================================= */
+.prose {
+  @apply text-foreground max-w-none;
+  line-height: 1.75;
+}
+
+.prose h1 {
+  @apply text-2xl font-bold text-foreground mt-8 mb-4 border-b border-border pb-2;
+}
+
+.prose h2 {
+  @apply text-xl font-semibold text-foreground mt-6 mb-3;
+}
+
+.prose h3 {
+  @apply text-lg font-semibold text-foreground mt-5 mb-2;
+}
+
+.prose h4, .prose h5, .prose h6 {
+  @apply font-semibold text-foreground mt-4 mb-2;
+}
+
+.prose p {
+  @apply mb-4 leading-7;
+}
+
+.prose a {
+  @apply text-primary underline underline-offset-2 hover:text-primary/80 transition-colors;
+}
+
+/* Wikilinks */
+.prose a[data-wikilink] {
+  @apply text-purple-400 no-underline hover:text-purple-300 border-b border-purple-400/40 hover:border-purple-300/60 transition-colors;
+}
+
+.prose strong {
+  @apply font-semibold text-foreground;
+}
+
+.prose em {
+  @apply italic;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-primary/60 pl-4 italic text-muted-foreground my-4;
+}
+
+.prose code {
+  @apply bg-muted text-foreground px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.prose pre {
+  @apply bg-muted border border-border rounded-lg p-4 overflow-x-auto my-4;
+}
+
+.prose pre code {
+  @apply bg-transparent px-0 py-0 text-sm;
+}
+
+.prose ul {
+  @apply list-disc list-inside space-y-1 mb-4 ml-4;
+}
+
+.prose ol {
+  @apply list-decimal list-inside space-y-1 mb-4 ml-4;
+}
+
+.prose li {
+  @apply leading-7;
+}
+
+.prose li > ul, .prose li > ol {
+  @apply ml-4 mt-1 mb-0;
+}
+
+.prose hr {
+  @apply border-border my-6;
+}
+
+.prose table {
+  @apply w-full border-collapse text-sm my-4;
+}
+
+.prose th {
+  @apply border border-border bg-muted px-3 py-2 text-left font-semibold;
+}
+
+.prose td {
+  @apply border border-border px-3 py-2;
+}
+
+.prose img {
+  @apply rounded-lg max-w-full my-4;
+}
+
+.prose mark {
+  @apply bg-yellow-400/20 text-yellow-200 px-0.5 rounded;
+}
+
+/* Task list checkboxes */
+.prose input[type="checkbox"] {
+  @apply mr-2 rounded accent-primary;
+}
+
+/* =============================================================================
+   CodeMirror Editor Overrides
+   ============================================================================= */
+.cm-editor {
+  height: 100%;
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.cm-editor.cm-focused {
+  outline: none !important;
+}
+
+.cm-scroller {
+  font-family: var(--font-mono) !important;
+  overflow: auto;
+}
+
+.cm-content {
+  padding: 16px 0;
+  caret-color: hsl(var(--primary));
+}
+
+.cm-line {
+  padding: 0 16px;
+}
+
+.cm-gutters {
+  background: transparent !important;
+  border-right: 1px solid hsl(var(--border)) !important;
+  color: hsl(var(--muted-foreground)) !important;
+}
+
+.cm-activeLineGutter {
+  background: hsl(var(--muted) / 0.5) !important;
+}
+
+.cm-activeLine {
+  background: hsl(var(--muted) / 0.3) !important;
+}
+
+.cm-selectionBackground {
+  background: hsl(var(--primary) / 0.25) !important;
+}
+
+.cm-cursor {
+  border-left-color: hsl(var(--primary)) !important;
+}
+
+/* =============================================================================
+   Utility Classes
+   ============================================================================= */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .animate-shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--muted)) 25%,
+      hsl(var(--secondary)) 50%,
+      hsl(var(--muted)) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s linear infinite;
+  }
+
+  .glass {
+    background: hsl(var(--card) / 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+
+  .truncate-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .truncate-3 {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+/* =============================================================================
+   Graph Canvas
+   ============================================================================= */
+.graph-container canvas {
+  border-radius: 0;
+}
+
+/* Sigma.js tooltip */
+.graph-tooltip {
+  @apply absolute z-50 px-2 py-1 text-xs bg-card border border-border rounded shadow-lg text-foreground pointer-events-none;
+}

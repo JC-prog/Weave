@@ -1,0 +1,284 @@
+version: "3.9"
+
+networks:
+  notebooklm-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  qdrant_data:
+  minio_data:
+
+services:
+  # ─── Infrastructure ───────────────────────────────────────────────────────────
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: notebooklm-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: notebooklm
+      POSTGRES_USER: notebooklm
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - notebooklm-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U notebooklm -d notebooklm"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: notebooklm-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - notebooklm-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: notebooklm-qdrant
+    restart: unless-stopped
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    volumes:
+      - qdrant_data:/qdrant/storage
+    networks:
+      - notebooklm-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:6333/healthz || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio
+    container_name: notebooklm-minio
+    restart: unless-stopped
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin123
+    volumes:
+      - minio_data:/data
+    networks:
+      - notebooklm-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9000/minio/health/live || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ─── Application Services ─────────────────────────────────────────────────────
+
+  auth-service:
+    build:
+      context: ../apps/auth-service
+      dockerfile: Dockerfile
+    container_name: notebooklm-auth
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env
+    environment:
+      PORT: 3001
+      SERVICE_NAME: auth-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - notebooklm-network
+
+  vault-service:
+    build:
+      context: ../apps/vault-service
+      dockerfile: Dockerfile
+    container_name: notebooklm-vault
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    env_file:
+      - .env
+    environment:
+      PORT: 3002
+      SERVICE_NAME: vault-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - notebooklm-network
+
+  graph-service:
+    build:
+      context: ../apps/graph-service
+      dockerfile: Dockerfile
+    container_name: notebooklm-graph
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    env_file:
+      - .env
+    environment:
+      PORT: 3003
+      SERVICE_NAME: graph-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - notebooklm-network
+
+  search-service:
+    build:
+      context: ../apps/search-service
+      dockerfile: Dockerfile
+    container_name: notebooklm-search
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    env_file:
+      - .env
+    environment:
+      PORT: 3004
+      SERVICE_NAME: search-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    networks:
+      - notebooklm-network
+
+  ai-service:
+    build:
+      context: ../apps/ai-service
+      dockerfile: Dockerfile
+    container_name: notebooklm-ai
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    env_file:
+      - .env
+    environment:
+      PORT: 3005
+      SERVICE_NAME: ai-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - notebooklm-network
+
+  embedding-service:
+    build:
+      context: ../apps/embedding-service
+      dockerfile: Dockerfile
+    container_name: notebooklm-embedding
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    env_file:
+      - .env
+    environment:
+      PORT: 3006
+      SERVICE_NAME: embedding-service
+    depends_on:
+      redis:
+        condition: service_healthy
+      qdrant:
+        condition: service_healthy
+    networks:
+      - notebooklm-network
+
+  media-service:
+    build:
+      context: ../apps/media-service
+      dockerfile: Dockerfile
+    container_name: notebooklm-media
+    restart: unless-stopped
+    ports:
+      - "3007:3007"
+    env_file:
+      - .env
+    environment:
+      PORT: 3007
+      SERVICE_NAME: media-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - notebooklm-network
+
+  gateway:
+    build:
+      context: ../apps/gateway
+      dockerfile: Dockerfile
+    container_name: notebooklm-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    environment:
+      PORT: 3000
+      SERVICE_NAME: gateway
+    depends_on:
+      - auth-service
+      - vault-service
+      - graph-service
+      - search-service
+      - ai-service
+      - embedding-service
+      - media-service
+    networks:
+      - notebooklm-network
+
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+    container_name: notebooklm-web
+    restart: unless-stopped
+    ports:
+      - "3008:3008"
+    env_file:
+      - .env
+    environment:
+      PORT: 3008
+      SERVICE_NAME: web
+    depends_on:
+      - gateway
+    networks:
+      - notebooklm-network
